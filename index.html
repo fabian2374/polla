@@ -23,6 +23,13 @@
   .btn-gold{background:var(--gold);color:#1a1300;}
   .btn-gold:hover{filter:brightness(1.08);}
   .prize-display{font-size:17px;font-weight:800;color:var(--gold);}
+  .prize-row{display:flex;align-items:center;gap:10px;background:var(--pitch-dark);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+  .prize-row.first{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+  .prize-row .m{font-size:22px;}
+  .prize-row .lbl{font-weight:800;font-size:13px;}
+  .prize-row .who{font-size:12px;opacity:.8;margin-top:2px;}
+  .prize-row .amt{font-weight:900;color:var(--gold);font-size:16px;text-align:right;white-space:nowrap;}
+  .pot-line{font-size:13px;opacity:.85;margin-bottom:10px;}
   label{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin:10px 0 5px;}
   input[type=text]{width:100%;background:var(--pitch-dark);border:1px solid var(--line);border-radius:8px;padding:11px;color:var(--chalk);font-size:15px;}
   input:focus{outline:2px solid var(--gold);}
@@ -99,8 +106,9 @@
   </div>
 
   <div class="box" id="prizeBox" style="display:none;">
-    <h2>Premio</h2>
+    <h2>Premios</h2>
     <div class="prize-display" id="prizeDisplay"></div>
+    <div id="prizeBreak"></div>
   </div>
 
   <div class="box">
@@ -192,7 +200,8 @@ function copyShareLink(){
   catch(e){ prompt("Copia este enlace:", url); }
 }
 
-let state={ prize:"", matches:[], people:[], predictions:{}, updatedAt:null };
+let state={ prize:"", pot:0, matches:[], people:[], predictions:{}, updatedAt:null };
+function formatCOP(n){ return "$ "+Math.round(n||0).toLocaleString("es-CO"); }
 
 // ---- puntaje ----
 function pointsFor(pred,real){
@@ -218,11 +227,27 @@ function anyReal(){ return state.matches.some(m=>m.real&&m.real.h!=null&&m.real.
 
 // ---- render ----
 function render(){
-  // premio
+  // premios
   const pb=document.getElementById("prizeBox");
-  if(state.prize){ pb.style.display=""; document.getElementById("prizeDisplay").textContent="🏆 "+state.prize; }
-  else pb.style.display="none";
+  const hasDesc=!!state.prize, hasPot=state.pot>0;
+  pb.style.display=(hasDesc||hasPot)?"":"none";
+  document.getElementById("prizeDisplay").textContent=hasDesc?("🏆 "+state.prize):"";
+  document.getElementById("prizeBreak").innerHTML=hasPot?buildPrizeRows():"";
   renderRank(); renderSummary(); renderMatches();
+}
+function buildPrizeRows(){
+  const amt=[state.pot*0.7, state.pot*0.2, state.pot*0.1];
+  const labels=["1er lugar · 70%","2º lugar · 20%","3er lugar · 10%"];
+  const medals=["🥇","🥈","🥉"];
+  const t=tally(), has=anyReal();
+  let html=`<div class="pot-line">🏦 Pozo total: <b style="color:var(--gold)">${formatCOP(state.pot)}</b></div>`;
+  for(let i=0;i<3;i++){
+    const who=(has && t[i] && t[i].pts>0) ? t[i].name : "Por definir";
+    html+=`<div class="prize-row${i===0?" first":""}"><span class="m">${medals[i]}</span>`+
+      `<div style="flex:1;"><div class="lbl">${labels[i]}</div><div class="who">${who}</div></div>`+
+      `<span class="amt">${formatCOP(amt[i])}</span></div>`;
+  }
+  return html;
 }
 function renderRank(){
   const area=document.getElementById("rankArea");
@@ -309,7 +334,7 @@ async function refresh(){
     if(!r.ok)throw new Error("HTTP "+r.status);
     const data=await r.json();
     const rec=data.record||data;
-    state={ prize:rec.prize||"", matches:rec.matches||[], people:rec.people||[],
+    state={ prize:rec.prize||"", pot:rec.pot||0, matches:rec.matches||[], people:rec.people||[],
             predictions:rec.predictions||{}, updatedAt:rec.updatedAt||null };
     render();
     const now=new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
