@@ -48,8 +48,10 @@
   table.summary{border-collapse:collapse;width:100%;font-size:13px;min-width:max-content;}
   table.summary th,table.summary td{border:1px solid var(--line);padding:8px 10px;text-align:center;white-space:nowrap;}
   table.summary thead th{background:var(--pitch-dark);color:var(--gold);font-size:11px;letter-spacing:.5px;text-transform:uppercase;}
-  table.summary thead th .real{display:block;color:var(--chalk);font-size:14px;font-weight:800;margin-top:3px;letter-spacing:0;text-transform:none;}
+  table.summary thead th .real{display:block;color:var(--chalk);font-size:14px;font-weight:800;margin-top:4px;letter-spacing:0;text-transform:none;}
   table.summary thead th .real.pending{color:var(--amber-ok);font-weight:700;}
+  table.summary thead th .mh{font-size:10px;opacity:.65;}
+  table.summary thead th .tm{display:block;color:var(--chalk);font-size:11.5px;font-weight:700;text-transform:none;letter-spacing:0;margin-top:2px;}
   table.summary td.name{text-align:left;font-weight:700;position:sticky;left:0;background:var(--card);z-index:1;}
   table.summary th.name{text-align:left;position:sticky;left:0;background:var(--pitch-dark);z-index:2;}
   table.summary td.total{font-weight:800;color:var(--gold);background:var(--pitch-dark);}
@@ -283,7 +285,10 @@ function renderSummary(){
     const fh=FLAG[m.home]||"",fa=FLAG[m.away]||"";
     const hasR=m.real&&m.real.h!=null&&m.real.a!=null;
     const real=hasR?`<span class="real">${m.real.h}-${m.real.a}</span>`:`<span class="real pending">pend.</span>`;
-    head+=`<th>P${i+1}<br>${fh}${fa}${real}</th>`;
+    head+=`<th><div class="mh">P${i+1}</div>`+
+      `<div class="tm">${fh} ${m.home}</div>`+
+      `<div class="tm">${fa} ${m.away}</div>`+
+      `${real}</th>`;
   });
   head+=`<th class="total">Total</th></tr>`;
   let body="";
